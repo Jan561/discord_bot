@@ -1,0 +1,14 @@
+[package]
+name = "discord_bot"
+version = "0.1.0"
+authors = ["Jan Adä <jan561.github@gmail.com>"]
+edition = "2018"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "0.2", features = ["sync"]}
+r6stats_client = { version = "0.2", features = ["threadsafe"] }
+serenity = "0.9"
+log = "0.4"
