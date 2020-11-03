@@ -4,6 +4,7 @@ mod handler;
 mod hook;
 mod model;
 mod rainbow;
+mod error;
 
 use crate::command::*;
 use crate::data::{GuildInfoMap, StatsClientContainer};
