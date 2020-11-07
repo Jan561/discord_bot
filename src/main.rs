@@ -12,6 +12,7 @@ use crate::data::{GuildInfoMap, StatsClientContainer};
 use crate::error::Error;
 use crate::handler::Handler;
 use crate::hook::{after, before};
+use crate::permission::Permission;
 use r6stats_client::Client as StatsClient;
 use serenity::framework::StandardFramework;
 use serenity::http::Http;

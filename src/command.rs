@@ -14,6 +14,8 @@ pub struct Rainbow;
 pub enum Error {
     RainbowError(RainbowError),
     ArgumentMissing(Option<String>),
+    PermissionDenied,
+    UserNotFound(String),
 }
 
 impl Display for Error {
@@ -22,14 +24,23 @@ impl Display for Error {
             Self::RainbowError(why) => Display::fmt(why, f),
             Self::ArgumentMissing(arg) => {
                 let arg = match arg {
-                    Some(arg) => ": " + arg,
+                    Some(arg) => format!(": {}", arg),
                     None => "".to_string(),
                 };
 
                 write!(f, "Argument missing{}.", arg)
             }
+            Self::PermissionDenied => write!(f, "Permission is denied."),
+            Self::UserNotFound(user) => write!(f, "User not found: {}.", user),
         }
     }
 }
 
-impl StdError for Error {}
+impl StdError for Error {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            Self::RainbowError(err) => Some(err),
+            Self::ArgumentMissing(_) | Self::PermissionDenied => None,
+        }
+    }
+}

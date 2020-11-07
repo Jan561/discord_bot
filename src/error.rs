@@ -17,6 +17,8 @@ impl Display for Error {
         match self {
             Self::SerenityError(why) => Display::fmt(why, f),
             Self::NoGuildInfo(guild) => write!(f, "Guild not present in map: {}", guild),
+            Self::CacheGuildMissing(guild) => write!(f, "Guild not cached: {}", guild),
+            Self::CacheRoleMissing(role) => write!(f, "Role not cached: {}", role),
         }
     }
 }
@@ -25,7 +27,7 @@ impl StdError for Error {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match self {
             Self::SerenityError(why) => Some(why),
-            Self::NoGuildInfo(_) => None,
+            Self::NoGuildInfo(_) | Self::CacheGuildMissing(_) | Self::CacheRoleMissing(_) => None,
         }
     }
 }
