@@ -6,5 +6,5 @@ use tokio::sync::RwLock;
 
 #[derive(Clone, Debug)]
 pub struct GuildInfo {
-    player_map: Arc<RwLock<HashMap<UserId, Player>>>,
+    pub player_map: Arc<RwLock<HashMap<UserId, Player>>>,
 }

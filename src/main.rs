@@ -1,13 +1,15 @@
 mod command;
 mod data;
+mod error;
 mod handler;
 mod hook;
 mod model;
+mod permission;
 mod rainbow;
-mod error;
 
 use crate::command::*;
 use crate::data::{GuildInfoMap, StatsClientContainer};
+use crate::error::Error;
 use crate::handler::Handler;
 use crate::hook::{after, before};
 use r6stats_client::Client as StatsClient;
