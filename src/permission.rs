@@ -1,4 +1,5 @@
 use crate::command::Error as CommandError;
+use crate::error::GeneralError;
 use crate::rainbow::Permission as RainbowPermission;
 use crate::Error;
 use serenity::async_trait;
@@ -12,7 +13,7 @@ pub trait Entity {
         &self,
         ctx: &Context,
         guild: GuildId,
-        permission: Permission,
+        permission: impl Into<Permission> + Send + 'async_trait,
     ) -> Result<bool, Error>;
 }
 
@@ -22,26 +23,31 @@ impl Entity for UserId {
         &self,
         ctx: &Context,
         guild: GuildId,
-        permission: Permission,
+        permission: impl Into<Permission> + Send + 'async_trait,
     ) -> Result<bool, Error> {
-        permission.allowed(ctx, guild, *self).await
+        has_permission(ctx, guild, *self, permission).await
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum Permission {
     RainbowPermission(RainbowPermission),
 }
 
 impl Permission {
-    pub async fn allowed(self, ctx: &Context, guild: GuildId, user: UserId) -> Result<bool, Error> {
+    pub async fn allowed(
+        &self,
+        ctx: &Context,
+        guild: GuildId,
+        user: UserId,
+    ) -> Result<bool, Error> {
         match self {
             Self::RainbowPermission(p) => p.allowed(ctx, guild, user).await,
         }
     }
 }
 
-pub async fn owner(ctx: &Context, guild: GuildId) -> Result<UserId, Error> {
+pub async fn guild_owner(ctx: &Context, guild: GuildId) -> Result<UserId, Error> {
     Ok(guild
         .to_guild_cached(&ctx.cache)
         .await
@@ -50,7 +56,7 @@ pub async fn owner(ctx: &Context, guild: GuildId) -> Result<UserId, Error> {
 }
 
 pub async fn is_admin(ctx: &Context, guild: GuildId, user: UserId) -> Result<bool, Error> {
-    if user == owner(ctx, guild).await? {
+    if user == guild_owner(ctx, guild).await? {
         return Ok(true);
     }
 
@@ -69,26 +75,48 @@ pub async fn is_admin(ctx: &Context, guild: GuildId, user: UserId) -> Result<boo
     Ok(false)
 }
 
+pub async fn has_permission(
+    ctx: &Context,
+    guild: GuildId,
+    user: UserId,
+    permission: impl Into<Permission> + Send,
+) -> Result<bool, Error> {
+    let permission = permission.into();
+
+    _has_permission(ctx, guild, user, &permission).await
+}
+
+async fn _has_permission(
+    ctx: &Context,
+    guild: GuildId,
+    user: UserId,
+    permission: &Permission,
+) -> Result<bool, Error> {
+    permission.allowed(ctx, guild, user).await
+}
+
 pub async fn check_permission(
     ctx: &Context,
     guild: GuildId,
     user: UserId,
-    permission: Permission,
-) -> Result<Result<(), CommandError>, Error> {
-    if user.has_permission(ctx, guild, permission).await? {
-        Ok(Ok(()))
+    permission: impl Into<Permission> + Send,
+) -> Result<(), GeneralError> {
+    let permission = permission.into();
+
+    if _has_permission(ctx, guild, user, &permission).await? {
+        Ok(())
     } else {
-        Ok(Err(CommandError::PermissionDenied))
+        Err(CommandError::PermissionDenied(permission).into())
     }
 }
 
-pub struct PermissionFacility {
+pub struct PermissionHelper {
     ctx: Context,
     guild_id: GuildId,
     user_id: UserId,
 }
 
-impl PermissionFacility {
+impl PermissionHelper {
     pub fn new(ctx: Context, guild_id: GuildId, user_id: UserId) -> Self {
         Self {
             ctx,
@@ -97,16 +125,17 @@ impl PermissionFacility {
         }
     }
 
-    pub async fn has_permission(&self, permission: Permission) -> Result<bool, Error> {
-        self.user_id
-            .has_permission(&self.ctx, self.guild_id, permission)
-            .await
+    pub async fn has_permission(
+        &self,
+        permission: impl Into<Permission> + Send,
+    ) -> Result<bool, Error> {
+        has_permission(&self.ctx, self.guild_id, self.user_id, permission).await
     }
 
     pub async fn check_permission(
         &self,
-        permission: Permission,
-    ) -> Result<Result<(), CommandError>, Error> {
+        permission: impl Into<Permission> + Send,
+    ) -> Result<(), GeneralError> {
         check_permission(&self.ctx, self.guild_id, self.user_id, permission).await
     }
 }

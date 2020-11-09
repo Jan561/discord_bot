@@ -8,3 +8,11 @@ use tokio::sync::RwLock;
 pub struct GuildInfo {
     pub player_map: Arc<RwLock<HashMap<UserId, Player>>>,
 }
+
+impl GuildInfo {
+    pub fn new() -> Self {
+        Self {
+            player_map: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
+}

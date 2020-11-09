@@ -5,6 +5,24 @@ use std::error::Error as StdError;
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug)]
+pub enum GeneralError {
+    ExecutionError(Error),
+    CommandError(CommandError),
+}
+
+impl From<Error> for GeneralError {
+    fn from(err: Error) -> Self {
+        Self::ExecutionError(err)
+    }
+}
+
+impl From<CommandError> for GeneralError {
+    fn from(err: CommandError) -> Self {
+        Self::CommandError(err)
+    }
+}
+
+#[derive(Debug)]
 pub enum Error {
     SerenityError(SerenityError),
     NoGuildInfo(GuildId),
