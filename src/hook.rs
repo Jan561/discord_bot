@@ -12,6 +12,4 @@ pub async fn before(_: &Context, msg: &Message, cmd: &str) -> bool {
 }
 
 #[hook]
-pub async fn after(_ctx: &Context, _msg: &Message, _cmd: &str, result: CommandResult) {
-    println!("{:?}", result);
-}
+pub async fn after(_ctx: &Context, _msg: &Message, _cmd: &str, _result: CommandResult) {}

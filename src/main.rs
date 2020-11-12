@@ -31,6 +31,8 @@ const ENV_R6STATS: &str = "R6STATS_TOKEN";
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     let http = http();
 
     let owners = owners(&http).await;

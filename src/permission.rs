@@ -116,6 +116,7 @@ pub struct PermissionHelper {
     user_id: UserId,
 }
 
+#[allow(dead_code)]
 impl PermissionHelper {
     pub fn new(ctx: Context, guild_id: GuildId, user_id: UserId) -> Self {
         Self {

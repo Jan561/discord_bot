@@ -1,5 +1,6 @@
 use crate::data::GuildInfoMap;
 use crate::model::GuildInfo;
+use log::info;
 use serenity::async_trait;
 use serenity::client::{Context, EventHandler};
 use serenity::model::gateway::Ready;
@@ -16,9 +17,11 @@ impl EventHandler for Handler {
         for guild in guilds {
             guild_info_map.insert(guild, GuildInfo::new());
         }
+
+        info!("Cache built")
     }
 
     async fn ready(&self, _: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
+        info!("{} is connected!", ready.user.name);
     }
 }
