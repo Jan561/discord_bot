@@ -1,10 +1,9 @@
 use super::Error as RainbowError;
-use crate::command::{execute, Error as CommandError};
+use crate::command::{self, Error as CommandError};
 use crate::permission::PermissionHelper;
 use crate::rainbow::model::{Player, Uplay};
 use crate::rainbow::utils::player_map;
 use crate::rainbow::{Message, Permission};
-use crate::Error;
 use serenity::client::Context;
 use serenity::framework::standard::macros::command;
 use serenity::framework::standard::{Args, CommandResult};
@@ -26,14 +25,7 @@ async fn link(ctx: &Context, msg: &SerenityMessage, mut args: Args) -> CommandRe
 
         let discord_user = match args.advance().current() {
             Some(user) => {
-                let user = msg
-                    .guild(&ctx.cache)
-                    .await
-                    .ok_or(Error::CacheGuildMissing(msg.guild_id.unwrap()))?
-                    .member_named(user)
-                    .ok_or(CommandError::UserNotFound(user.to_string()))?
-                    .user
-                    .clone();
+                let user = member!(ctx, msg, user).user;
 
                 permission
                     .check_permission(Permission::LinkOtherUser(user.id))
@@ -86,5 +78,5 @@ async fn link(ctx: &Context, msg: &SerenityMessage, mut args: Args) -> CommandRe
         Ok(())
     };
 
-    execute(ctx, msg, cmd).await
+    command::execute(ctx, msg, cmd).await
 }

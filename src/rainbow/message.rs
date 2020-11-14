@@ -10,6 +10,8 @@ pub enum Message {
     LinkedOtherUser(Uplay, UserId),
     Unlinked(Uplay),
     UnlinkedOtherUser(Uplay, UserId),
+    UnlinkedNothing,
+    UnlinkedNothingOtherUser(UserId),
 }
 
 impl Message {
@@ -36,6 +38,15 @@ impl Message {
                     uplay,
                     user.tag()
                 )?
+            }
+            Self::UnlinkedNothing => say!(
+                ctx,
+                channel_id,
+                "No uplay linked to your account, nothing to do!"
+            )?,
+            Self::UnlinkedNothingOtherUser(user) => {
+                let user = user.to_user(&ctx.http).await?;
+                say!(ctx, channel_id, "No uplay linked to `{}`.", user.tag())?
             }
         };
 

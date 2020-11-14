@@ -14,7 +14,7 @@ use std::fmt::{self, Display, Formatter};
 use std::future::Future;
 
 #[group]
-#[commands(link)]
+#[commands(link, unlink)]
 #[only_in(guilds)]
 pub struct Rainbow;
 
@@ -68,7 +68,7 @@ where
         Err(crate::error::GeneralError::CommandError(why)) => {
             why.notify_author(ctx, msg.channel_id).await?;
 
-            warn!("[Command Error] {}", why);
+            warn!("Command Error: {}", why);
 
             Ok(())
         }
