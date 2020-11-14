@@ -13,3 +13,4 @@ r6stats_client = { version = "0.2", features = ["threadsafe"] }
 serenity = "0.9"
 log = "0.4"
 env_logger = "0.8"
+futures = "0.3"

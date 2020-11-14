@@ -16,7 +16,7 @@ pub async fn after(ctx: &Context, msg: &Message, cmd: &str, result: CommandResul
     match result {
         Ok(()) => info!("Processed commanad `{}`", cmd),
         Err(why) => {
-            error!("Command `{}` returned error {:?}", cmd, why);
+            error!("Command `{}` returned error {}", cmd, why);
             let _ = say!(ctx, msg.channel_id, "An error occured. Try again later.");
         }
     }

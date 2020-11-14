@@ -2,7 +2,6 @@ use super::Error as RainbowError;
 use crate::command::{self, Error as CommandError};
 use crate::permission::PermissionHelper;
 use crate::rainbow::model::{Player, Uplay};
-use crate::rainbow::utils::player_map;
 use crate::rainbow::{Message, Permission};
 use serenity::client::Context;
 use serenity::framework::standard::macros::command;
@@ -36,7 +35,7 @@ async fn link(ctx: &Context, msg: &SerenityMessage, mut args: Args) -> CommandRe
             None => msg.author.clone(),
         };
 
-        let player_map_lock = player_map(ctx, msg.guild_id.unwrap()).await?;
+        let player_map_lock = player_map!(ctx, msg.guild_id.unwrap())?;
         let mut player_map = player_map_lock.write().await;
 
         // Check if uplay user is already taken

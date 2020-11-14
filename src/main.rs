@@ -53,7 +53,7 @@ async fn main() {
     {
         let mut data = client.data.write().await;
         data.insert::<GuildInfoMap>(Arc::new(RwLock::new(HashMap::new())));
-        data.insert::<StatsClientContainer>(stats_client());
+        data.insert::<StatsClientContainer>(Arc::new(stats_client()));
     }
 
     client.start().await.expect("Error starting client");

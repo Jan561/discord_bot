@@ -1,6 +1,5 @@
 use crate::command;
 use crate::permission::PermissionHelper;
-use crate::rainbow::utils::player_map;
 use crate::rainbow::{Message, Permission};
 use serenity::client::Context;
 use serenity::framework::standard::macros::command;
@@ -27,7 +26,7 @@ async fn unlink(ctx: &Context, msg: &SerenityMessage, mut args: Args) -> Command
             None => msg.author.clone(),
         };
 
-        let player_map_lock = player_map(ctx, msg.guild_id.unwrap()).await?;
+        let player_map_lock = player_map!(ctx, msg.guild_id.unwrap())?;
         let mut player_map = player_map_lock.write().await;
 
         let removed_player = player_map.remove(&discord_user.id);
