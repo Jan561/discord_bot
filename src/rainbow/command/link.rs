@@ -18,7 +18,7 @@ async fn link(ctx: &Context, msg: &SerenityMessage, mut args: Args) -> CommandRe
         let uplay = args
             .trimmed()
             .current()
-            .ok_or(CommandError::ArgumentMissing("Uplay-Account".to_string()))?
+            .ok_or_else(|| CommandError::ArgumentMissing("Uplay-Account".to_string()))?
             .to_string();
         let uplay = Uplay(uplay);
 
@@ -41,7 +41,7 @@ async fn link(ctx: &Context, msg: &SerenityMessage, mut args: Args) -> CommandRe
         // Check if uplay user is already taken
         let existing = player_map
             .iter()
-            .find(|&(_, p)| &p.uplay == &uplay)
+            .find(|&(_, p)| p.uplay == uplay)
             .map(|(&u, p)| (u, p.clone()));
         if existing.is_some() {
             return Err(CommandError::from(RainbowError::UplayTaken(uplay)).into());

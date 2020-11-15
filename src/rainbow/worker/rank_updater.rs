@@ -96,7 +96,7 @@ pub fn spawn_worker(ctx: Arc<Context>) {
                         let role = match guild
                             .role_by_name(role_str)
                             .cloned()
-                            .ok_or(Error::UnrecognisedRole(role_str.to_string()))
+                            .ok_or_else(|| Error::UnrecognisedRole(role_str.to_string()))
                         {
                             Ok(role) => role,
                             Err(why) => {

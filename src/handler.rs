@@ -32,7 +32,7 @@ impl EventHandler for Handler {
     }
 }
 
-async fn fill_guild_info_map(ctx: &Context, guilds: &Vec<GuildId>) {
+async fn fill_guild_info_map(ctx: &Context, guilds: &[GuildId]) {
     let data = ctx.data.read().await;
     let mut guild_info_map = data.get::<GuildInfoMap>().unwrap().write().await;
 
