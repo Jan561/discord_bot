@@ -28,3 +28,38 @@ macro_rules! player_map {
             .map(|guild_info| std::sync::Arc::clone(&guild_info.player_map))
     }};
 }
+
+macro_rules! columns {
+    ($name:ident, [$($col_var:ident => ($col:tt, $col_ty:expr)),*]) => {
+        #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+        pub enum $name {
+            $(
+                $col_var
+            )*
+        }
+
+        impl std::fmt::Display for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                match self {
+                    $(
+                        Self::$col_var => write!(f, "{}", $col),
+                    )*
+                }
+            }
+        }
+
+        impl crate::db::Column for $name {
+            fn all_columns() -> Vec<Self> {
+                vec![$(Self::$col_var),*]
+            }
+
+            fn ty(&self) -> rusqlite::types::Type {
+                match c {
+                    $(
+                        $name::$col_var => $col_ty,
+                    )*
+                }
+            }
+        }
+    }
+}

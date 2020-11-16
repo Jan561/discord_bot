@@ -1,6 +1,7 @@
 use crate::command::Error as CommandError;
 use crate::rainbow::Error as RainbowError;
 use r6stats_client::Error as StatsClientError;
+use rusqlite::Error as SqlError;
 use serenity::model::id::{GuildId, RoleId};
 use serenity::Error as SerenityError;
 use std::error::Error as StdError;
@@ -33,6 +34,7 @@ pub enum Error {
     CacheRoleMissing(RoleId),
     RainbowError(RainbowError),
     UnrecognisedRole(String),
+    SqlError(SqlError),
 }
 
 impl Display for Error {
@@ -45,6 +47,7 @@ impl Display for Error {
             Self::CacheRoleMissing(role) => write!(f, "Role not cached: {}", role),
             Self::RainbowError(why) => Display::fmt(why, f),
             Self::UnrecognisedRole(role) => write!(f, "Unknown role: {}", role),
+            Self::SqlError(why) => Display::fmt(why, f),
         }
     }
 }
@@ -55,6 +58,7 @@ impl StdError for Error {
             Self::SerenityError(why) => Some(why),
             Self::StatsClientError(why) => Some(why),
             Self::RainbowError(why) => Some(why),
+            Self::SqlError(why) => Some(why),
             Self::NoGuildInfo(_)
             | Self::CacheGuildMissing(_)
             | Self::CacheRoleMissing(_)
@@ -78,5 +82,11 @@ impl From<StatsClientError> for Error {
 impl From<RainbowError> for Error {
     fn from(err: RainbowError) -> Self {
         Self::RainbowError(err)
+    }
+}
+
+impl From<SqlError> for Error {
+    fn from(err: SqlError) -> Self {
+        Self::SqlError(err)
     }
 }
