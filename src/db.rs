@@ -1,6 +1,8 @@
 use crate::Error;
 use rusqlite::types::Type;
 use rusqlite::Connection;
+use std::rc::Rc;
+use std::sync::Arc;
 
 pub trait DbObject {
     fn create_table(db: &Connection) -> Result<(), Error>;
@@ -42,4 +44,24 @@ db_values! {
     &str => Text,
     Vec<u8> => Blob,
     [u8] => Blob
+}
+
+impl<T: DbValue + ?Sized> DbValue for &T {
+    const TYPE: Type = T::TYPE;
+}
+
+impl<T: DbValue> DbValue for Option<T> {
+    const TYPE: Type = T::TYPE;
+}
+
+impl<T: DbValue + ?Sized> DbValue for Box<T> {
+    const TYPE: Type = T::TYPE;
+}
+
+impl<T: DbValue + ?Sized> DbValue for Rc<T> {
+    const TYPE: Type = T::TYPE;
+}
+
+impl<T: DbValue + ?Sized> DbValue for Arc<T> {
+    const TYPE: Type = T::TYPE;
 }
