@@ -1,10 +1,11 @@
 use crate::error::Error;
+use macros::Sql;
 use r6stats_client::stats::model::seasonal::{Rank, Season};
 use r6stats_client::Client as StatsClient;
 use r6stats_client::{Platform, Region};
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Clone, Debug)]
+#[derive(Sql, Clone, Debug)]
 pub struct Player {
     pub uplay: Uplay,
 }
