@@ -28,3 +28,26 @@ macro_rules! player_map {
             .map(|guild_info| std::sync::Arc::clone(&guild_info.player_map))
     }};
 }
+
+/*macro_rules! db {
+    (
+        $vis:vis struct $ident:ident $(<$($generic:ident $(: $bound:ty)?),* $(,)?>)?
+        $(
+            where
+            $($where_gen:ident : $where_bound:ty),+ $(,)?
+        )?
+        {
+            $($field:tt)*
+        }
+    ) => {
+        $vis struct $ident<__State, $($generic),*>
+        $(
+            where
+            $($where_gen : $where_bound),*
+        )?
+        {
+
+        }
+    };
+}
+*/

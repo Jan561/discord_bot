@@ -5,13 +5,23 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 pub trait DbObject {
-    fn create_table(db: &Connection) -> Result<(), Error>;
+    fn create_table() -> Result<(), Error>;
+}
+
+pub trait DbObjectSaved: DbObject + Sized {
+    type Unsaved: DbObjectUnsaved;
 
     fn save(&self, db: &Connection) -> Result<(), Error>;
 
     fn reload(&mut self, db: &Connection) -> Result<&mut Self, Error>;
 
-    fn destroy(&self, db: &Connection) -> Result<(), Error>;
+    fn destroy(self, db: &Connection) -> Result<Self::Unsaved, (Self, Error)>;
+}
+
+pub trait DbObjectUnsaved: DbObject + Sized {
+    type Saved: DbObjectSaved;
+
+    fn save(self, db: &Connection) -> Result<Self::Saved, (Self, Error)>;
 }
 
 pub trait DbValue {
@@ -64,4 +74,12 @@ impl<T: DbValue + ?Sized> DbValue for Rc<T> {
 
 impl<T: DbValue + ?Sized> DbValue for Arc<T> {
     const TYPE: Type = T::TYPE;
+}
+
+#[derive(Debug)]
+pub struct Unsaved;
+
+#[derive(Debug)]
+pub struct Saved {
+    id: i64,
 }
