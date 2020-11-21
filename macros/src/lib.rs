@@ -1,13 +1,16 @@
 use heck::SnakeCase;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens, TokenStreamExt};
-use syn::export::TokenStream;
-use syn::{parse_macro_input, Data, DeriveInput, Type, Visibility, Generics, GenericParam, TypeParam, Field, TypePath, Path, PathSegment, Fields, FieldsNamed, Attribute};
-use syn::parse::ParseBuffer;
-use syn::token::{Lt, Gt, Colon, Eq};
 use std::iter::FromIterator;
+use syn::export::TokenStream;
+use syn::parse::ParseBuffer;
 use syn::punctuated::Punctuated;
+use syn::token::{Colon, Eq, Gt, Lt};
 use syn::Token;
+use syn::{
+    parse_macro_input, Attribute, Data, DeriveInput, Field, Fields, FieldsNamed, GenericParam,
+    Generics, Path, PathSegment, Type, TypeParam, TypePath, Visibility,
+};
 
 const DB_STATE_GENERIC_IDENT: &str = "__State";
 const DB_STATE_FIELD_IDENT: &str = "__state";
@@ -31,9 +34,7 @@ impl ToTokens for Attrs<'_> {
 
 impl<'a> From<&'a [Attribute]> for Attrs<'a> {
     fn from(attrs: &'a [Attribute]) -> Self {
-        Self {
-            attrs,
-        }
+        Self { attrs }
     }
 }
 
@@ -65,11 +66,18 @@ pub fn db(input: TokenStream) -> TokenStream {
         _ => panic!("Expected named fields"),
     };
 
-    let orig_fields_params: Punctuated<Field, Token![,]> = orig_fields.iter().cloned().map(|mut f| {
-        f.vis = Visibility::Inherited;
-        f
-    }).collect();
-    let orig_fields_construct: Punctuated<Ident, Token![,]> = orig_fields.iter().map(|f| f.ident.clone().unwrap()).collect();
+    let orig_fields_params: Punctuated<Field, Token![,]> = orig_fields
+        .iter()
+        .cloned()
+        .map(|mut f| {
+            f.vis = Visibility::Inherited;
+            f
+        })
+        .collect();
+    let orig_fields_construct: Punctuated<Ident, Token![,]> = orig_fields
+        .iter()
+        .map(|f| f.ident.clone().unwrap())
+        .collect();
 
     let state_field_ident = state_field_ident();
 
@@ -110,13 +118,16 @@ fn state_default_type() -> Type {
         qself: None,
         path: Path {
             leading_colon: None,
-            segments: path_punctuated(db_state_default_path())
-        }
+            segments: path_punctuated(db_state_default_path()),
+        },
     })
 }
 
 fn path_punctuated(path: &str) -> Punctuated<PathSegment, Token![::]> {
-    path.split("::").into_iter().map(|seg| PathSegment::from(Ident::new(seg, Span::call_site()))).collect()
+    path.split("::")
+        .into_iter()
+        .map(|seg| PathSegment::from(Ident::new(seg, Span::call_site())))
+        .collect()
 }
 
 fn add_generic(generics: &mut Generics, generic: GenericParam) {
@@ -135,7 +146,7 @@ fn state_field() -> Field {
         colon_token: Some(Colon::default()),
         ty: Type::Path(TypePath {
             qself: None,
-            path: Path::from(PathSegment::from(state_generic_ident()))
+            path: Path::from(PathSegment::from(state_generic_ident())),
         }),
     }
 }

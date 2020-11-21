@@ -1,9 +1,9 @@
 use crate::error::Error;
+use macros::db;
 use r6stats_client::stats::model::seasonal::{Rank, Season};
 use r6stats_client::Client as StatsClient;
 use r6stats_client::{Platform, Region};
 use std::fmt::{self, Display, Formatter};
-use macros::db;
 
 db! {
     #[derive(Clone, Debug)]
@@ -14,9 +14,7 @@ db! {
 
 impl<__State> Player<__State> {
     pub fn new(uplay: Uplay) -> Self {
-        Self {
-            uplay,
-        }
+        Self { uplay }
     }
     pub async fn rank(&self, client: &StatsClient) -> Result<Option<Rank>, Error> {
         let seasonal_stats = client.stats().seasonal(&self.uplay, Platform::Pc).await?;
