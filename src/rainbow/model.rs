@@ -12,10 +12,13 @@ db! {
     }
 }
 
-impl<__State> Player<__State> {
+impl Player {
     pub fn new(uplay: Uplay) -> Self {
-        Self { uplay }
+        Self::__new(uplay)
     }
+}
+
+impl<__State> Player<__State> {
     pub async fn rank(&self, client: &StatsClient) -> Result<Option<Rank>, Error> {
         let seasonal_stats = client.stats().seasonal(&self.uplay, Platform::Pc).await?;
 

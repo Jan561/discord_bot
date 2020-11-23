@@ -1,4 +1,4 @@
-use crate::db::Saved;
+use crate::db::Unsaved;
 use crate::rainbow::model::Player;
 use serenity::model::id::UserId;
 use std::collections::HashMap;
@@ -7,7 +7,7 @@ use tokio::sync::RwLock;
 
 #[derive(Clone, Debug)]
 pub struct GuildInfo {
-    pub player_map: Arc<RwLock<HashMap<UserId, Player<Saved>>>>,
+    pub player_map: Arc<RwLock<HashMap<UserId, Player<Unsaved>>>>,
 }
 
 impl GuildInfo {

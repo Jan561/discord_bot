@@ -47,12 +47,7 @@ async fn link(ctx: &Context, msg: &SerenityMessage, mut args: Args) -> CommandRe
             return Err(CommandError::from(RainbowError::UplayTaken(uplay)).into());
         }
 
-        let old_player = player_map.insert(
-            discord_user.id,
-            Player {
-                uplay: uplay.clone(),
-            },
-        );
+        let old_player = player_map.insert(discord_user.id, Player::new(uplay.clone()));
 
         if let Some(old) = old_player {
             if discord_user.id == msg.author.id {
