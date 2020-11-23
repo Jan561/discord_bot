@@ -1,16 +1,13 @@
-use heck::SnakeCase;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens, TokenStreamExt};
-use std::iter::FromIterator;
 use syn::export::TokenStream;
-use syn::parse::ParseBuffer;
 use syn::punctuated::Punctuated;
 use syn::token::{Colon, Eq, Gt, Lt};
-use syn::Token;
 use syn::{
-    parse_macro_input, Attribute, Data, DeriveInput, Field, Fields, FieldsNamed, GenericParam,
-    Generics, Path, PathSegment, Type, TypeParam, TypePath, Visibility,
+    parse_macro_input, Attribute, Data, DeriveInput, Field, Fields, GenericParam, Generics, Path,
+    PathSegment, Type, TypeParam, TypePath, Visibility,
 };
+use syn::{Token, WhereClause};
 
 const DB_STATE_GENERIC_IDENT: &str = "__State";
 const DB_STATE_FIELD_IDENT: &str = "__state";
@@ -47,26 +44,78 @@ pub fn db(input: TokenStream) -> TokenStream {
         panic!("Expected a struct");
     };
 
-    add_generic(&mut input.generics, state_generic());
-    input.generics.lt_token = Some(Lt::default());
-    input.generics.gt_token = Some(Gt::default());
+    if !matches!(&data.fields, Fields::Named(_)) {
+        panic!("Expected named fields");
+    }
 
-    let orig_fields = data.fields.clone();
+    let mut modified_generics = input.generics.clone();
+    let mut modified_fields = data.fields.clone();
 
-    add_field(&mut data.fields, state_field());
+    prepare_generics(&mut modified_generics);
+    prepare_fields(&mut modified_fields);
 
     let attrs = Attrs::from(input.attrs.as_slice());
     let vis = &input.vis;
     let ident = &input.ident;
-    let generics = &input.generics;
-    let fields = &data.fields;
 
-    let orig_fields = match orig_fields {
-        Fields::Named(named) => named.named,
-        _ => panic!("Expected named fields"),
+    let mut expanded = quote! {
+        #attrs
+        #vis struct #ident #modified_generics
+            #modified_fields
     };
 
-    let orig_fields_params: Punctuated<Field, Token![,]> = orig_fields
+    expanded.append_all(constructor(&data.fields, &input.generics, &ident));
+
+    expanded.into()
+}
+
+fn constructor(orig_fields: &Fields, orig_generics: &Generics, ident: &Ident) -> TokenStream2 {
+    let (unsaved_impl_generics, unsaved_type_generics, where_clause) = impl_unsaved(&orig_generics);
+    let (unsaved_impl_generics, _, _) = unsaved_impl_generics.split_for_impl();
+    let (_, unsaved_type_generics, _) = unsaved_type_generics.split_for_impl();
+
+    let (orig_fields_params, orig_fields_constructor) = orig_fields_constructor(&orig_fields);
+
+    let state_field_ident = state_field_ident();
+
+    quote! {
+        impl #unsaved_impl_generics #ident #unsaved_type_generics #where_clause {
+            fn __new(#orig_fields_params) -> Self {
+                Self {
+                    #state_field_ident : crate::db::Unsaved,
+                    #orig_fields_constructor
+                }
+            }
+        }
+    }
+}
+
+fn prepare_generics(generics: &mut Generics) {
+    add_generic(generics, state_generic());
+    generics.lt_token = Some(Lt::default());
+    generics.gt_token = Some(Gt::default());
+}
+
+fn prepare_fields(fields: &mut Fields) {
+    add_field(fields, state_field());
+}
+
+// Returns ({Generics for ImplGenerics}, {Generics for TypeGenerics}, {Where clause})
+fn impl_unsaved(orig_generics: &Generics) -> (Generics, Generics, Option<WhereClause>) {
+    let mut type_generics = orig_generics.clone();
+    type_generics.params.push(db_state_unsaved_generic());
+
+    (
+        orig_generics.clone(),
+        type_generics,
+        orig_generics.where_clause.clone(),
+    )
+}
+
+fn orig_fields_constructor(
+    orig_fields: &Fields,
+) -> (Punctuated<Field, Token![,]>, Punctuated<Ident, Token![,]>) {
+    let params = orig_fields
         .iter()
         .cloned()
         .map(|mut f| {
@@ -74,30 +123,12 @@ pub fn db(input: TokenStream) -> TokenStream {
             f
         })
         .collect();
-    let orig_fields_construct: Punctuated<Ident, Token![,]> = orig_fields
+    let constructor = orig_fields
         .iter()
         .map(|f| f.ident.clone().unwrap())
         .collect();
 
-    let state_field_ident = state_field_ident();
-
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-
-    let expanded = quote! {
-        #attrs
-        #vis struct #ident #generics #fields
-
-        impl #impl_generics #ident #ty_generics #where_clause {
-            fn __new(#orig_fields_params) -> Self {
-                Self {
-                    #state_field_ident : crate::db::Unsaved,
-                    #orig_fields_construct
-                }
-            }
-        }
-    };
-
-    expanded.into()
+    (params, constructor)
 }
 
 fn state_generic_ident() -> Ident {
@@ -166,4 +197,12 @@ fn add_field(fields: &mut Fields, mut field: Field) {
         }
         Fields::Unit => panic!("Cannot add to unit fields"),
     }
+}
+
+fn db_state_unsaved_ident() -> Ident {
+    Ident::new(DB_STATE_UNSAVED_PATH, Span::call_site())
+}
+
+fn db_state_unsaved_generic() -> GenericParam {
+    GenericParam::Type(TypeParam::from(db_state_unsaved_ident()))
 }
