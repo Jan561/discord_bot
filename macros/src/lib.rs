@@ -35,17 +35,13 @@ impl<'a> From<&'a [Attribute]> for Attrs<'a> {
     }
 }
 
-struct ImplState<'a> {
+struct TypeGenericsWithState<'a> {
     orig_generics: &'a Generics,
-    ident: &'a Ident,
     state: Type,
 }
 
-impl ToTokens for ImplState<'_> {
+impl ToTokens for TypeGenericsWithState<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
-        let (impl_generics, _, where_clause) = self.orig_generics.split_for_impl();
-        let ident = self.ident;
-
         let mut orig_generics = self.orig_generics.clone();
 
         if !orig_generics.params.empty_or_trailing() {
@@ -55,7 +51,7 @@ impl ToTokens for ImplState<'_> {
         let state = &self.state;
 
         let expanded = quote! {
-            impl #impl_generics #ident <#orig_generics #state> #where_clause
+            <#orig_generics #state>
         };
 
         tokens.append_all(expanded);
@@ -97,9 +93,8 @@ pub fn db(input: TokenStream) -> TokenStream {
 }
 
 fn constructor(orig_fields: &Fields, orig_generics: &Generics, ident: &Ident) -> TokenStream2 {
-    let unsaved_impl = ImplState {
+    let type_generics = TypeGenericsWithState {
         orig_generics,
-        ident,
         state: db_state_unsaved_type(),
     };
 
@@ -107,8 +102,10 @@ fn constructor(orig_fields: &Fields, orig_generics: &Generics, ident: &Ident) ->
 
     let state_field_ident = state_field_ident();
 
+    let (orig_generics_impl, _, where_clause) = orig_generics.split_for_impl();
+
     quote! {
-        #unsaved_impl {
+        impl #orig_generics_impl #ident #type_generics #where_clause {
             fn __new(#orig_fields_params) -> Self {
                 Self {
                     #state_field_ident : crate::db::Unsaved,
