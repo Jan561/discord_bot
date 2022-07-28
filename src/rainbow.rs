@@ -6,6 +6,7 @@ mod error;
 mod message;
 mod permission;
 mod role;
+mod sql;
 
 pub use self::error::Error;
 pub use self::message::Message;

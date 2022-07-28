@@ -9,6 +9,7 @@ mod hook;
 mod model;
 mod permission;
 mod rainbow;
+mod sql;
 
 use crate::command::*;
 use crate::data::{GuildInfoMap, StatsClientContainer};
